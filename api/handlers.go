@@ -17,6 +17,22 @@ type Transacao struct {
 	Descricao string `json:"descricao"`
 }
 
+type Extrato struct {
+	Saldo struct {
+		Total       int       `json:"total"`
+		DataExtrato time.Time `json:"data_extrato"`
+		Limite      int       `json:"limite"`
+	} `json:"saldo"`
+	UltimasTransacoes []TransacaoExtrato `json:"ultimas_transacoes"`
+}
+
+type TransacaoExtrato struct {
+	Valor       int       `json:"valor"`
+	Tipo        string    `json:"tipo"`
+	Descricao   string    `json:"descricao"`
+	RealizadaEm time.Time `json:"realizada_em"`
+}
+
 func TransacaoHandler(pool *pgxpool.Pool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		idStr := chi.URLParam(r, "id")
@@ -82,5 +98,56 @@ func TransacaoHandler(pool *pgxpool.Pool) http.HandlerFunc {
 			"limite": limite,
 			"saldo":  novoSaldo,
 		})
+	}
+}
+
+func ExtratoHandler(pool *pgxpool.Pool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		idStr := chi.URLParam(r, "id")
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "id inválido", 422)
+			return
+		}
+
+		var saldo, limite int
+		err = pool.QueryRow(context.Background(),
+			"SELECT saldo, limite FROM clientes WHERE id = $1", id).
+			Scan(&saldo, &limite)
+		if err != nil {
+			http.Error(w, "cliente não encontrado", 404)
+			return
+		}
+
+		rows, err := pool.Query(context.Background(),
+			`SELECT valor, tipo, descricao, realizada_em
+			 FROM transacoes
+			 WHERE cliente_id = $1
+			 ORDER BY realizada_em DESC
+			 LIMIT 10`, id)
+		if err != nil {
+			http.Error(w, "erro ao buscar transações", 500)
+			return
+		}
+		defer rows.Close()
+
+		var transacoes []TransacaoExtrato
+		for rows.Next() {
+			var t TransacaoExtrato
+			if err := rows.Scan(&t.Valor, &t.Tipo, &t.Descricao, &t.RealizadaEm); err != nil {
+				http.Error(w, "erro ao processar transações", 500)
+				return
+			}
+			transacoes = append(transacoes, t)
+		}
+
+		extrato := Extrato{}
+		extrato.Saldo.Total = saldo
+		extrato.Saldo.DataExtrato = time.Now().UTC()
+		extrato.Saldo.Limite = limite
+		extrato.UltimasTransacoes = transacoes
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(extrato)
 	}
 }
