@@ -8,11 +8,6 @@ services:
       - DATABASE_URL=postgres://admin:admin@db:5432/rinha
     depends_on:
       - db
-    deploy:
-      resources:
-        limits:
-          cpus: "0.6"
-          memory: "200MB"
 
   api02:
     <<: *api
@@ -27,12 +22,11 @@ services:
     depends_on:
       - api01
       - api02
-    deploy:
-      resources:
-        limits:
-          cpus: "0.17"
-          memory: "10MB"
-
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+        
   db:
     image: postgres:15
     environment:
@@ -43,8 +37,4 @@ services:
       - "5432:5432"
     volumes:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    deploy:
-      resources:
-        limits:
-          cpus: "0.13"
-          memory: "140MB"
+    command: ["postgres", "-c", "max_connections=500"]
