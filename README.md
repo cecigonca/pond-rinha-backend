@@ -98,7 +98,7 @@ k6 run rinha-test.js
 
 ## Resultados dos Testes de Carga
 
-### Macbook
+### Macbook M3 Pro
 - Acurácia: **100%**, sem erros
 - Total de requisições bem-sucedidas: **+500.000**
 
@@ -108,4 +108,8 @@ k6 run rinha-test.js
 
 Esses números demonstram que a aplicação se comporta bem em ambiente otimizado, com bom aproveitamento de concorrência, e ainda assim entrega bons resultados mesmo em máquinas com menos recursos.
 
+ Vídeos de Demonstração
 
+- [Mostrando Código]()
+- [Execução no Dell i5]()
+- [Execução no Macbook]()
