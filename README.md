@@ -61,5 +61,13 @@ A escalabilidade foi feita horizontalmente: duas instâncias da API Go, balancea
 Go já é rápido por padrão, mas mesmo assim evitei usar bibliotecas pesadas. Os acesso ao banco é direto com SQL, configurei um pool de conexões para evitar abrir uma nova a cada requisição.
 
 ### O que você fez para garantir a manutenibilidade do sistema?
+Organizei o projeto em pastas separadas por responsabilidade, o que ajuda muito a manter e entender o sistema. Por exemplo:
+- A pasta `api/` contém os handlers da API REST — é onde estão as rotas e a lógica para transações e extratos.
+- A pasta `database/` cuida da conexão com o PostgreSQL e do script de inicialização do banco (`init.sql`).
+- Em `k6-test/`, deixei os testes de carga escritos com `k6`, facilitando a validação de performance sempre que algo for alterado.
+- O main.go serve só para orquestrar tudo: carrega a conexão, monta as rotas e sobe o servidor.
 
 ### O que você fez para garantir a testabilidade do sistema?
+Comecei focando no teste principal da atividade, que é o de carga. Criei um script com o k6, que simula usuários reais fazendo transações e consultas de extrato, em diferentes volumes. Esse teste mede tempo de resposta, taxa de erros e quantidade de requisições válidas.
+
+Pra facilitar isso, organizei o código da API de forma que cada parte tem sua responsabilidade. Por exemplo, o arquivo handlers.go cuida só das rotas e da lógica da API, e a conexão com o banco está separada em `database/connection.go`. Isso ajuda muito caso eu quisesse testar as funções de forma isolada no futuro, como com testes unitários ou mocks.
