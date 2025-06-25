@@ -8,12 +8,12 @@ API RESTful desenvolvida em Go com banco de dados PostgreSQL e com Docker, com o
 
 ## Funcionalidades Implementadas
 
-- **POST `/clientes/{id}/transacoes`**
+- **POST**
   - Realiza transações de crédito ou débito
   - Validação de saldo e limite
   - Resposta com saldo atualizado
 
-- **GET `/clientes/{id}/extrato`**
+- **GET**
   - Exibe as últimas 10 transações
   - Inclui saldo atual, limite e data da consulta
 
@@ -21,27 +21,27 @@ API RESTful desenvolvida em Go com banco de dados PostgreSQL e com Docker, com o
 
 ### Backend
 
-- **Go** – linguagem leve, compilada e altamente performática
-- `net/http` – servidor HTTP nativo da linguagem
-- `chi` – roteador minimalista e eficiente, ideal para APIs REST
-- `pgx/v5` – driver PostgreSQL com suporte avançado a pool de conexões
-- `Context API` – gerenciamento de timeout e controle transacional
-- `Transações SQL (**FOR UPDATE**)` – controle de concorrência no acesso ao saldo
+- **Go**
+- `net/http` – servidor HTTP
+- `chi` – roteador para APIs REST
+- `pgx/v5` – driver PostgreSQL com suporte para pool de conexões
+- Context API – gerenciamento de timeout e controle transacional
+- Transações SQL (**FOR UPDATE**) – controle de concorrência no acesso ao saldo
 
 ### Banco de Dados (PostgreSQL)
 
 - **PostgreSQL**
-- `Schema relacional` – tabelas *clientes* e *transacoes* com constraints
-- `Integridade garantida` – uso de foreign keys e validações no banco
-- `Comandos SQL otimizados` – *INSERT*, *SELECT FOR UPDATE*, *UPDATE* com foco em concorrência segura
+- Schema relacional – tabelas *clientes* e *transacoes* com constraints
+- Integridade garantida – uso de foreign keys e validações no banco
+- Comandos SQL otimizados – *INSERT*, *SELECT FOR UPDATE*, *UPDATE* com foco em concorrência segura
 
 ### DevOps & Testes
 
 - **Docker & Docker Compose**
 - `NGINX` – balanceador de carga configurado com `least_conn`
-- `k6` – ferramenta para testes de carga, performance e stress testing
-- `Pool de conexões` – até 100 conexões simultâneas otimizadas para PostgreSQL
-- `Escalabilidade horizontal` – duas instâncias da API Go balanceadas por NGINX
+- `k6` – ferramenta para testes de carga
+- Pool de conexões – até 100 conexões simultâneas para PostgreSQL
+- Escalabilidade horizontal – duas instâncias da API Go balanceadas por NGINX
 
 ## Resposta das Perguntas Enunciado
 
@@ -71,3 +71,41 @@ Organizei o projeto em pastas separadas por responsabilidade, o que ajuda muito 
 Comecei focando no teste principal da atividade, que é o de carga. Criei um script com o k6, que simula usuários reais fazendo transações e consultas de extrato, em diferentes volumes. Esse teste mede tempo de resposta, taxa de erros e quantidade de requisições válidas.
 
 Pra facilitar isso, organizei o código da API de forma que cada parte tem sua responsabilidade. Por exemplo, o arquivo handlers.go cuida só das rotas e da lógica da API, e a conexão com o banco está separada em `database/connection.go`. Isso ajuda muito caso eu quisesse testar as funções de forma isolada no futuro, como com testes unitários ou mocks.
+
+## Como Rodar o Projeto
+
+1. **Clone o repositório**
+
+```bash
+git clone https://github.com/cecigonca/pond-rinha-backend.git
+```
+```bash
+cd pond-rinha-backend
+```
+
+2. **No primeiro terminal**
+
+```bash
+docker-compose up --build
+```
+
+3. **Em um segundo terminal**
+   
+```bash
+cd k6-test
+k6 run rinha-test.js
+```
+
+## Resultados dos Testes de Carga
+
+### Macbook
+- Acurácia: **100%**, sem erros
+- Total de requisições bem-sucedidas: **+500.000**
+
+### Dell i5
+- Acurácia: **99%**, com alguns timeouts devido a hardware limitado
+- Total de requisições bem-sucedidas: **~45.000**
+
+Esses números demonstram que a aplicação se comporta bem em ambiente otimizado, com bom aproveitamento de concorrência, e ainda assim entrega bons resultados mesmo em máquinas com menos recursos.
+
+
